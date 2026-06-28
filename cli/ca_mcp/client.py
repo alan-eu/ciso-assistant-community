@@ -149,6 +149,30 @@ def handle_response(res, error_message="Error"):
     return res.json()
 
 
+def safe_json(res):
+    """Parse response.json() and surface a useful error if the body is empty
+    or non-JSON.
+
+    Returns:
+        (data, error_message) — exactly one is None.
+    """
+    text = res.text or ""
+    if not text.strip():
+        return None, (
+            f"Backend returned empty body with HTTP {res.status_code} for "
+            f"{getattr(res, 'url', 'this endpoint')}. The backend retrieve() "
+            f"likely raised silently. Check the backend logs."
+        )
+    try:
+        return res.json(), None
+    except ValueError as e:
+        snippet = text[:300].replace("\n", " ")
+        return None, (
+            f"Backend returned non-JSON body with HTTP {res.status_code} "
+            f"({e}). First 300 chars: {snippet!r}"
+        )
+
+
 def get_paginated_results(data):
     """
     Extract results from paginated or non-paginated response

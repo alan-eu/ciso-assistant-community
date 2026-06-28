@@ -6,7 +6,7 @@ nested fields; these detail tools render the full backend payload so the model
 can see every field the API returned (and chain follow-up calls using IDs).
 """
 
-from ..client import make_get_request
+from ..client import make_get_request, safe_json
 from ..resolvers import (
     resolve_applied_control_id,
     resolve_asset_id,
@@ -40,7 +40,9 @@ async def get_applied_control(applied_control_id: str):
         res = make_get_request(f"/applied-controls/{resolved}/")
         if res.status_code != 200:
             return http_error_response(res.status_code, res.text)
-        ac = res.json()
+        ac, _err = safe_json(res)
+        if _err:
+            return error_response("Backend Error", _err, "Report to backend team; the retrieve endpoint returned a bad response", False)
 
         result = render_detail(
             f"Applied Control: {ac.get('name', 'N/A')}",
@@ -109,7 +111,9 @@ async def get_requirement_assessment(requirement_assessment_id: str):
         res = make_get_request(f"/requirement-assessments/{resolved}/")
         if res.status_code != 200:
             return http_error_response(res.status_code, res.text)
-        ra = res.json()
+        ra, _err = safe_json(res)
+        if _err:
+            return error_response("Backend Error", _err, "Report to backend team; the retrieve endpoint returned a bad response", False)
 
         result = render_detail(
             f"Requirement Assessment: {ra.get('name') or ra.get('ref_id') or ra.get('id')}",
@@ -176,7 +180,9 @@ async def get_asset(asset_id: str):
         res = make_get_request(f"/assets/{resolved}/")
         if res.status_code != 200:
             return http_error_response(res.status_code, res.text)
-        asset = res.json()
+        asset, _err = safe_json(res)
+        if _err:
+            return error_response("Backend Error", _err, "Report to backend team; the retrieve endpoint returned a bad response", False)
 
         result = render_detail(
             f"Asset: {asset.get('name', 'N/A')}",
@@ -260,7 +266,9 @@ async def get_user(user_id: str):
         res = make_get_request(f"/users/{resolved}/")
         if res.status_code != 200:
             return http_error_response(res.status_code, res.text)
-        user = res.json()
+        user, _err = safe_json(res)
+        if _err:
+            return error_response("Backend Error", _err, "Report to backend team; the retrieve endpoint returned a bad response", False)
 
         result = render_detail(
             f"User: {user.get('email', 'N/A')}",
@@ -311,7 +319,9 @@ async def get_entity_assessment(entity_assessment_id: str):
         res = make_get_request(f"/entity-assessments/{resolved}/")
         if res.status_code != 200:
             return http_error_response(res.status_code, res.text)
-        ea = res.json()
+        ea, _err = safe_json(res)
+        if _err:
+            return error_response("Backend Error", _err, "Report to backend team; the retrieve endpoint returned a bad response", False)
 
         result = render_detail(
             f"Entity Assessment: {ea.get('name', 'N/A')}",
@@ -376,7 +386,9 @@ async def get_attack_path(attack_path_id: str):
         res = make_get_request(f"/ebios-rm/attack-paths/{resolved}/")
         if res.status_code != 200:
             return http_error_response(res.status_code, res.text)
-        ap = res.json()
+        ap, _err = safe_json(res)
+        if _err:
+            return error_response("Backend Error", _err, "Report to backend team; the retrieve endpoint returned a bad response", False)
 
         result = render_detail(
             f"Attack Path: {ap.get('name', 'N/A')}",
@@ -425,7 +437,9 @@ async def get_operational_scenario(operational_scenario_id: str):
         res = make_get_request(f"/ebios-rm/operational-scenarios/{resolved}/")
         if res.status_code != 200:
             return http_error_response(res.status_code, res.text)
-        os_ = res.json()
+        os_, _err = safe_json(res)
+        if _err:
+            return error_response("Backend Error", _err, "Report to backend team; the retrieve endpoint returned a bad response", False)
 
         result = render_detail(
             f"Operational Scenario: {os_.get('name') or os_.get('str') or os_.get('id')}",
