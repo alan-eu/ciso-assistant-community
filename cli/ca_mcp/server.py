@@ -185,6 +185,85 @@ from .tools.custom_fields_tools import (
     delete_custom_field_definition,
 )
 
+from .tools.metrology_tools import (
+    get_metric_definitions,
+    create_metric_definition,
+    update_metric_definition,
+    delete_metric_definition,
+    get_metric_instances,
+    create_metric_instance,
+    update_metric_instance,
+    delete_metric_instance,
+    get_custom_metric_samples,
+    create_custom_metric_sample,
+    get_dashboards,
+    create_dashboard,
+    delete_dashboard,
+    get_dashboard_widgets,
+)
+
+from .tools.resilience_tools import (
+    update_business_impact_analysis,
+    delete_business_impact_analysis,
+    get_business_impact_analysis_metrics,
+    get_asset_assessments,
+    create_asset_assessment,
+    update_asset_assessment,
+    delete_asset_assessment,
+    get_escalation_thresholds,
+    create_escalation_threshold,
+    delete_escalation_threshold,
+    get_dora_incident_reports,
+    get_dora_incident_report,
+    validate_dora_incident_report,
+    delete_dora_incident_report,
+)
+
+from .tools.pmbok_tools import (
+    get_projects,
+    get_project,
+    create_project,
+    update_project,
+    delete_project,
+    get_accreditations,
+    create_accreditation,
+    update_accreditation,
+    delete_accreditation,
+    get_generic_collections,
+    create_generic_collection,
+    delete_generic_collection,
+    get_responsibility_matrices,
+    create_responsibility_matrix,
+    delete_responsibility_matrix,
+    cycle_responsibility_matrix_cell,
+    get_responsibility_roles,
+)
+
+from .tools.sec_intel_tools import (
+    get_security_advisories,
+    get_security_advisory,
+    create_security_advisory,
+    delete_security_advisory,
+    sync_kev_advisories,
+    sync_euvd_advisories,
+    enrich_security_advisory,
+    get_cwes,
+    get_cwe,
+    sync_cwe_catalog,
+)
+
+from .tools.library_tools import (
+    get_stored_library_content,
+    get_stored_library_tree,
+    delete_stored_library,
+    unload_stored_library,
+    get_loaded_library_content,
+    get_loaded_library_tree,
+    delete_loaded_library,
+    update_loaded_library,
+    get_available_loaded_library_updates,
+)
+
 from .tools.analysis_tools import (
     get_all_audits_with_metrics,
     get_audit_gap_analysis,
@@ -436,6 +515,75 @@ mcp.tool()(get_custom_field_definition)
 mcp.tool()(create_custom_field_definition)
 mcp.tool()(update_custom_field_definition)
 mcp.tool()(delete_custom_field_definition)
+
+mcp.tool()(get_metric_definitions)
+mcp.tool()(create_metric_definition)
+mcp.tool()(update_metric_definition)
+mcp.tool()(delete_metric_definition)
+mcp.tool()(get_metric_instances)
+mcp.tool()(create_metric_instance)
+mcp.tool()(update_metric_instance)
+mcp.tool()(delete_metric_instance)
+mcp.tool()(get_custom_metric_samples)
+mcp.tool()(create_custom_metric_sample)
+mcp.tool()(get_dashboards)
+mcp.tool()(create_dashboard)
+mcp.tool()(delete_dashboard)
+mcp.tool()(get_dashboard_widgets)
+
+mcp.tool()(update_business_impact_analysis)
+mcp.tool()(delete_business_impact_analysis)
+mcp.tool()(get_business_impact_analysis_metrics)
+mcp.tool()(get_asset_assessments)
+mcp.tool()(create_asset_assessment)
+mcp.tool()(update_asset_assessment)
+mcp.tool()(delete_asset_assessment)
+mcp.tool()(get_escalation_thresholds)
+mcp.tool()(create_escalation_threshold)
+mcp.tool()(delete_escalation_threshold)
+mcp.tool()(get_dora_incident_reports)
+mcp.tool()(get_dora_incident_report)
+mcp.tool()(validate_dora_incident_report)
+mcp.tool()(delete_dora_incident_report)
+
+mcp.tool()(get_projects)
+mcp.tool()(get_project)
+mcp.tool()(create_project)
+mcp.tool()(update_project)
+mcp.tool()(delete_project)
+mcp.tool()(get_accreditations)
+mcp.tool()(create_accreditation)
+mcp.tool()(update_accreditation)
+mcp.tool()(delete_accreditation)
+mcp.tool()(get_generic_collections)
+mcp.tool()(create_generic_collection)
+mcp.tool()(delete_generic_collection)
+mcp.tool()(get_responsibility_matrices)
+mcp.tool()(create_responsibility_matrix)
+mcp.tool()(delete_responsibility_matrix)
+mcp.tool()(cycle_responsibility_matrix_cell)
+mcp.tool()(get_responsibility_roles)
+
+mcp.tool()(get_security_advisories)
+mcp.tool()(get_security_advisory)
+mcp.tool()(create_security_advisory)
+mcp.tool()(delete_security_advisory)
+mcp.tool()(sync_kev_advisories)
+mcp.tool()(sync_euvd_advisories)
+mcp.tool()(enrich_security_advisory)
+mcp.tool()(get_cwes)
+mcp.tool()(get_cwe)
+mcp.tool()(sync_cwe_catalog)
+
+mcp.tool()(get_stored_library_content)
+mcp.tool()(get_stored_library_tree)
+mcp.tool()(delete_stored_library)
+mcp.tool()(unload_stored_library)
+mcp.tool()(get_loaded_library_content)
+mcp.tool()(get_loaded_library_tree)
+mcp.tool()(delete_loaded_library)
+mcp.tool()(update_loaded_library)
+mcp.tool()(get_available_loaded_library_updates)
 
 mcp.tool()(get_all_audits_with_metrics)
 mcp.tool()(get_audit_gap_analysis)
