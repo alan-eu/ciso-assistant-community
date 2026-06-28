@@ -381,6 +381,16 @@ async def update_applied_control(
     link: str = None,
     ref_id: str = None,
     owner: list = None,
+    folder: str = None,
+    reference_control: str = None,
+    evidences: list = None,
+    requirement_assessments: list = None,
+    assets: list = None,
+    findings: list = None,
+    incidents: list = None,
+    objectives: list = None,
+    filtering_labels: list = None,
+    security_exceptions: list = None,
 ) -> str:
     """Update applied control properties
 
@@ -408,7 +418,17 @@ async def update_applied_control(
         expiry_date: Expiry date YYYY-MM-DD
         link: External link (e.g. Jira URL)
         ref_id: Reference ID
-        owner: List of owner UUIDs (replaces existing)
+        owner: List of owner UUIDs or emails (replaces existing)
+        folder: New folder ID/name
+        reference_control: Reference control ID/name
+        evidences: List of evidence IDs/names (replaces existing)
+        requirement_assessments: List of requirement assessment UUIDs (replaces existing)
+        assets: List of asset IDs/names (replaces existing)
+        findings: List of finding IDs/names (replaces existing)
+        incidents: List of incident IDs/names (replaces existing)
+        objectives: List of objective IDs/names (replaces existing)
+        filtering_labels: List of filtering label IDs/names (replaces existing)
+        security_exceptions: List of security exception IDs/names (replaces existing)
     """
     try:
         # Resolve control name to ID if needed
@@ -446,7 +466,63 @@ async def update_applied_control(
         if ref_id is not None:
             payload["ref_id"] = ref_id
         if owner is not None:
-            payload["owner"] = owner
+            # Accept emails or UUIDs in `owner`; the API needs UUIDs.
+            from ..resolvers import resolve_user_id
+
+            payload["owner"] = [resolve_user_id(o) for o in owner]
+        if folder is not None:
+            from ..resolvers import resolve_folder_id
+
+            payload["folder"] = resolve_folder_id(folder)
+        if reference_control is not None:
+            from ..resolvers import resolve_id_or_name
+
+            payload["reference_control"] = resolve_id_or_name(
+                reference_control, "/reference-controls/"
+            )
+        if evidences is not None:
+            from ..resolvers import resolve_evidence_id
+
+            payload["evidences"] = [resolve_evidence_id(x) for x in evidences]
+        if requirement_assessments is not None:
+            from ..resolvers import resolve_requirement_assessment_id
+
+            payload["requirement_assessments"] = [
+                resolve_requirement_assessment_id(x) for x in requirement_assessments
+            ]
+        if assets is not None:
+            from ..resolvers import resolve_asset_id
+
+            payload["assets"] = [resolve_asset_id(x) for x in assets]
+        if findings is not None:
+            from ..resolvers import resolve_finding_id
+
+            payload["findings"] = [resolve_finding_id(x) for x in findings]
+        if incidents is not None:
+            from ..resolvers import resolve_id_or_name
+
+            payload["incidents"] = [
+                resolve_id_or_name(x, "/incidents/") for x in incidents
+            ]
+        if objectives is not None:
+            from ..resolvers import resolve_id_or_name
+
+            payload["objectives"] = [
+                resolve_id_or_name(x, "/objectives/") for x in objectives
+            ]
+        if filtering_labels is not None:
+            from ..resolvers import resolve_id_or_name
+
+            payload["filtering_labels"] = [
+                resolve_id_or_name(x, "/filtering-labels/") for x in filtering_labels
+            ]
+        if security_exceptions is not None:
+            from ..resolvers import resolve_id_or_name
+
+            payload["security_exceptions"] = [
+                resolve_id_or_name(x, "/security-exceptions/")
+                for x in security_exceptions
+            ]
 
         if not payload:
             return "Error: No fields provided to update"

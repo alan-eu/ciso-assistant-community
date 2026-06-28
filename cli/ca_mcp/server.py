@@ -99,6 +99,31 @@ from .tools.timeline_comment_tools import (
     delete_comment,
 )
 
+from .tools.audit_tools import (
+    get_compliance_assessment,
+    update_compliance_assessment,
+    delete_compliance_assessment,
+    sync_compliance_assessment_to_applied_controls,
+    get_compliance_assessment_global_score,
+    get_compliance_assessment_quality_check,
+    get_statement_of_applicability,
+    get_controls_coverage,
+    get_evidence_coverage,
+    get_compliance_timeline,
+    compare_compliance_assessments,
+    map_compliance_assessment_from,
+)
+
+from .tools.applied_control_ops_tools import (
+    delete_applied_control,
+    duplicate_applied_control,
+    merge_applied_controls,
+    sync_applied_control_to_reference,
+    get_applied_controls_todo,
+    get_applied_controls_to_review,
+    get_applied_controls_analytics,
+)
+
 from .tools.analysis_tools import (
     get_all_audits_with_metrics,
     get_audit_gap_analysis,
@@ -278,6 +303,27 @@ mcp.tool()(get_comments)
 mcp.tool()(create_comment)
 mcp.tool()(update_comment)
 mcp.tool()(delete_comment)
+
+mcp.tool()(get_compliance_assessment)
+mcp.tool()(update_compliance_assessment)
+mcp.tool()(delete_compliance_assessment)
+mcp.tool()(sync_compliance_assessment_to_applied_controls)
+mcp.tool()(get_compliance_assessment_global_score)
+mcp.tool()(get_compliance_assessment_quality_check)
+mcp.tool()(get_statement_of_applicability)
+mcp.tool()(get_controls_coverage)
+mcp.tool()(get_evidence_coverage)
+mcp.tool()(get_compliance_timeline)
+mcp.tool()(compare_compliance_assessments)
+mcp.tool()(map_compliance_assessment_from)
+
+mcp.tool()(delete_applied_control)
+mcp.tool()(duplicate_applied_control)
+mcp.tool()(merge_applied_controls)
+mcp.tool()(sync_applied_control_to_reference)
+mcp.tool()(get_applied_controls_todo)
+mcp.tool()(get_applied_controls_to_review)
+mcp.tool()(get_applied_controls_analytics)
 
 mcp.tool()(get_all_audits_with_metrics)
 mcp.tool()(get_audit_gap_analysis)
