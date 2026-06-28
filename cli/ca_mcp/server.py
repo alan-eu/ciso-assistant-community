@@ -124,6 +124,67 @@ from .tools.applied_control_ops_tools import (
     get_applied_controls_analytics,
 )
 
+from .tools.chat_tools import (
+    get_chat_sessions,
+    create_chat_session,
+    delete_chat_session,
+    get_indexed_documents,
+    delete_indexed_document,
+    get_questionnaire_runs,
+    get_questionnaire_run,
+    delete_questionnaire_run,
+    get_agent_runs,
+    get_agent_actions,
+    set_agent_action_state,
+)
+
+from .tools.integrations_tools import (
+    get_integration_providers,
+    get_integration_configurations,
+    get_integration_configuration,
+    create_integration_configuration,
+    update_integration_configuration,
+    delete_integration_configuration,
+    test_integration_connection,
+    list_integration_remote_objects,
+    run_integration_rpc,
+)
+
+from .tools.webhooks_tools import (
+    get_webhook_event_types,
+    get_webhook_endpoints,
+    create_webhook_endpoint,
+    update_webhook_endpoint,
+    delete_webhook_endpoint,
+    get_audit_sinks,
+    create_audit_sink,
+    update_audit_sink,
+    delete_audit_sink,
+    replay_audit_sink,
+)
+
+from .tools.doc_management_tools import (
+    get_managed_documents,
+    get_managed_document,
+    create_managed_document,
+    delete_managed_document,
+    get_document_revisions,
+    get_document_revision,
+    update_document_revision,
+    submit_document_revision_for_review,
+    approve_document_revision,
+    publish_document_revision,
+    request_changes_on_document_revision,
+)
+
+from .tools.custom_fields_tools import (
+    get_custom_field_definitions,
+    get_custom_field_definition,
+    create_custom_field_definition,
+    update_custom_field_definition,
+    delete_custom_field_definition,
+)
+
 from .tools.analysis_tools import (
     get_all_audits_with_metrics,
     get_audit_gap_analysis,
@@ -324,6 +385,57 @@ mcp.tool()(sync_applied_control_to_reference)
 mcp.tool()(get_applied_controls_todo)
 mcp.tool()(get_applied_controls_to_review)
 mcp.tool()(get_applied_controls_analytics)
+
+mcp.tool()(get_chat_sessions)
+mcp.tool()(create_chat_session)
+mcp.tool()(delete_chat_session)
+mcp.tool()(get_indexed_documents)
+mcp.tool()(delete_indexed_document)
+mcp.tool()(get_questionnaire_runs)
+mcp.tool()(get_questionnaire_run)
+mcp.tool()(delete_questionnaire_run)
+mcp.tool()(get_agent_runs)
+mcp.tool()(get_agent_actions)
+mcp.tool()(set_agent_action_state)
+
+mcp.tool()(get_integration_providers)
+mcp.tool()(get_integration_configurations)
+mcp.tool()(get_integration_configuration)
+mcp.tool()(create_integration_configuration)
+mcp.tool()(update_integration_configuration)
+mcp.tool()(delete_integration_configuration)
+mcp.tool()(test_integration_connection)
+mcp.tool()(list_integration_remote_objects)
+mcp.tool()(run_integration_rpc)
+
+mcp.tool()(get_webhook_event_types)
+mcp.tool()(get_webhook_endpoints)
+mcp.tool()(create_webhook_endpoint)
+mcp.tool()(update_webhook_endpoint)
+mcp.tool()(delete_webhook_endpoint)
+mcp.tool()(get_audit_sinks)
+mcp.tool()(create_audit_sink)
+mcp.tool()(update_audit_sink)
+mcp.tool()(delete_audit_sink)
+mcp.tool()(replay_audit_sink)
+
+mcp.tool()(get_managed_documents)
+mcp.tool()(get_managed_document)
+mcp.tool()(create_managed_document)
+mcp.tool()(delete_managed_document)
+mcp.tool()(get_document_revisions)
+mcp.tool()(get_document_revision)
+mcp.tool()(update_document_revision)
+mcp.tool()(submit_document_revision_for_review)
+mcp.tool()(approve_document_revision)
+mcp.tool()(publish_document_revision)
+mcp.tool()(request_changes_on_document_revision)
+
+mcp.tool()(get_custom_field_definitions)
+mcp.tool()(get_custom_field_definition)
+mcp.tool()(create_custom_field_definition)
+mcp.tool()(update_custom_field_definition)
+mcp.tool()(delete_custom_field_definition)
 
 mcp.tool()(get_all_audits_with_metrics)
 mcp.tool()(get_audit_gap_analysis)
