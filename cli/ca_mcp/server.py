@@ -44,6 +44,61 @@ from .tools.detail_tools import (
     get_operational_scenario,
 )
 
+from .tools.evidence_tools import (
+    get_evidences,
+    get_evidence,
+    create_evidence,
+    update_evidence,
+    delete_evidence,
+    attach_evidence_file,
+)
+
+from .tools.risk_acceptance_tools import (
+    get_risk_acceptances,
+    get_risk_acceptance,
+    create_risk_acceptance,
+    update_risk_acceptance,
+    delete_risk_acceptance,
+    submit_risk_acceptance,
+    draft_risk_acceptance,
+    accept_risk_acceptance,
+    reject_risk_acceptance,
+    revoke_risk_acceptance,
+)
+
+from .tools.policy_tools import (
+    get_policies,
+    get_policy,
+    create_policy,
+    update_policy,
+    delete_policy,
+)
+
+from .tools.findings_tools import (
+    get_findings_assessments,
+    get_findings_assessment,
+    create_findings_assessment,
+    update_findings_assessment,
+    delete_findings_assessment,
+    get_findings,
+    get_finding,
+    create_finding,
+    update_finding,
+    delete_finding,
+)
+
+from .tools.timeline_comment_tools import (
+    get_timeline_entries,
+    get_timeline_entry,
+    create_timeline_entry,
+    update_timeline_entry,
+    delete_timeline_entry,
+    get_comments,
+    create_comment,
+    update_comment,
+    delete_comment,
+)
+
 from .tools.analysis_tools import (
     get_all_audits_with_metrics,
     get_audit_gap_analysis,
@@ -178,6 +233,51 @@ mcp.tool()(get_user)
 mcp.tool()(get_entity_assessment)
 mcp.tool()(get_attack_path)
 mcp.tool()(get_operational_scenario)
+
+mcp.tool()(get_evidences)
+mcp.tool()(get_evidence)
+mcp.tool()(create_evidence)
+mcp.tool()(update_evidence)
+mcp.tool()(delete_evidence)
+mcp.tool()(attach_evidence_file)
+
+mcp.tool()(get_risk_acceptances)
+mcp.tool()(get_risk_acceptance)
+mcp.tool()(create_risk_acceptance)
+mcp.tool()(update_risk_acceptance)
+mcp.tool()(delete_risk_acceptance)
+mcp.tool()(submit_risk_acceptance)
+mcp.tool()(draft_risk_acceptance)
+mcp.tool()(accept_risk_acceptance)
+mcp.tool()(reject_risk_acceptance)
+mcp.tool()(revoke_risk_acceptance)
+
+mcp.tool()(get_policies)
+mcp.tool()(get_policy)
+mcp.tool()(create_policy)
+mcp.tool()(update_policy)
+mcp.tool()(delete_policy)
+
+mcp.tool()(get_findings_assessments)
+mcp.tool()(get_findings_assessment)
+mcp.tool()(create_findings_assessment)
+mcp.tool()(update_findings_assessment)
+mcp.tool()(delete_findings_assessment)
+mcp.tool()(get_findings)
+mcp.tool()(get_finding)
+mcp.tool()(create_finding)
+mcp.tool()(update_finding)
+mcp.tool()(delete_finding)
+
+mcp.tool()(get_timeline_entries)
+mcp.tool()(get_timeline_entry)
+mcp.tool()(create_timeline_entry)
+mcp.tool()(update_timeline_entry)
+mcp.tool()(delete_timeline_entry)
+mcp.tool()(get_comments)
+mcp.tool()(create_comment)
+mcp.tool()(update_comment)
+mcp.tool()(delete_comment)
 
 mcp.tool()(get_all_audits_with_metrics)
 mcp.tool()(get_audit_gap_analysis)

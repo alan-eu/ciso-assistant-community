@@ -883,6 +883,34 @@ def resolve_kill_chain_id(kill_chain_id: str) -> str:
     raise ValueError(f"Kill chain step '{kill_chain_id}' is not a valid UUID")
 
 
+def resolve_evidence_id(name_or_id: str) -> str:
+    """Resolve an evidence UUID from a name or UUID."""
+    return resolve_id_or_name(name_or_id, "/evidences/")
+
+
+def resolve_risk_acceptance_id(name_or_id: str) -> str:
+    """Resolve a risk acceptance UUID from a name or UUID."""
+    return resolve_id_or_name(name_or_id, "/risk-acceptances/")
+
+
+def resolve_policy_id(name_or_id: str) -> str:
+    """Resolve a policy UUID from a name or UUID.
+
+    Policies are polymorphic AppliedControls served from /policies/.
+    """
+    return resolve_id_or_name(name_or_id, "/policies/")
+
+
+def resolve_finding_id(name_or_id: str) -> str:
+    """Resolve a finding UUID from a name or UUID."""
+    return resolve_id_or_name(name_or_id, "/findings/")
+
+
+def resolve_findings_assessment_id(name_or_id: str) -> str:
+    """Resolve a findings assessment UUID from a name or UUID."""
+    return resolve_id_or_name(name_or_id, "/findings-assessments/")
+
+
 def resolve_user_id(user_email_or_id: str) -> str:
     """Resolve a user UUID from an email address or UUID."""
     if "-" in user_email_or_id and len(user_email_or_id) == 36:

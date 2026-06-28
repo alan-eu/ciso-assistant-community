@@ -103,6 +103,35 @@ def make_delete_request(endpoint):
     )
 
 
+def make_multipart_post_request(endpoint, file_path, field_name="file", extra_fields=None):
+    """POST a multipart/form-data request with a file attachment.
+
+    Used for endpoints like /evidences/{id}/upload/ that take a binary file
+    instead of a JSON payload. Auth is via token; Content-Type is left to
+    `requests` so it sets the correct multipart boundary.
+
+    Args:
+        endpoint: API endpoint
+        file_path: Local path to the file to upload
+        field_name: Multipart field name the server expects (default "file")
+        extra_fields: Optional dict of additional form fields
+
+    Returns:
+        Response object
+    """
+    url = f"{API_URL}{endpoint}"
+    with open(file_path, "rb") as fh:
+        files = {field_name: fh}
+        return requests.post(
+            url,
+            headers=get_headers(),
+            files=files,
+            data=extra_fields or {},
+            verify=VERIFY_CERTIFICATE,
+            timeout=HTTP_TIMEOUT,
+        )
+
+
 def handle_response(res, error_message="Error"):
     """
     Handle API response and check for errors
