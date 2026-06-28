@@ -34,6 +34,16 @@ from .tools.read_tools import (
     get_users,
 )
 
+from .tools.detail_tools import (
+    get_applied_control,
+    get_requirement_assessment,
+    get_asset,
+    get_user,
+    get_entity_assessment,
+    get_attack_path,
+    get_operational_scenario,
+)
+
 from .tools.analysis_tools import (
     get_all_audits_with_metrics,
     get_audit_gap_analysis,
@@ -160,6 +170,14 @@ mcp.tool()(get_vulnerabilities)
 mcp.tool()(get_vulnerability)
 mcp.tool()(get_asset_classes)
 mcp.tool()(get_users)
+
+mcp.tool()(get_applied_control)
+mcp.tool()(get_requirement_assessment)
+mcp.tool()(get_asset)
+mcp.tool()(get_user)
+mcp.tool()(get_entity_assessment)
+mcp.tool()(get_attack_path)
+mcp.tool()(get_operational_scenario)
 
 mcp.tool()(get_all_audits_with_metrics)
 mcp.tool()(get_audit_gap_analysis)

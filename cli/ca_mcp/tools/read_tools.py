@@ -50,19 +50,29 @@ async def get_risk_scenarios(folder: str = None, risk_assessment: str = None):
         if filters:
             result += f" ({', '.join(f'{k}={v}' for k, v in filters.items())})"
         result += "\n\n"
-        result += "|UUID|Ref|Name|Inherent Level|Current Level|Residual Level|Treatment|\n"
-        result += "|---|---|---|---|---|---|---|\n"
+        from ..utils.detail_formatter import fmt_m2m_cell
+
+        result += "|UUID|Ref|Name|Inherent|Current|Residual|Treatment|Owner|Applied Controls|Threats|Assets|\n"
+        result += "|---|---|---|---|---|---|---|---|---|---|---|\n"
 
         for rs in scenarios:
             uuid = rs.get("id", "N/A")
-            ref_id = rs.get("ref_id") or "N/A"
+            ref_id = rs.get("ref_id") or "-"
             name = rs.get("name", "N/A")
             inherent_level = (rs.get("inherent_level") or {}).get("name", "--")
             current_level = (rs.get("current_level") or {}).get("name", "--")
             residual_level = (rs.get("residual_level") or {}).get("name", "--")
             treatment = rs.get("treatment") or "--"
+            owner = fmt_m2m_cell(rs.get("owner"), max_inline=2)
+            applied_controls = fmt_m2m_cell(rs.get("applied_controls"), max_inline=2)
+            threats = fmt_m2m_cell(rs.get("threats"), max_inline=2)
+            assets = fmt_m2m_cell(rs.get("assets"), max_inline=2)
 
-            result += f"|{uuid}|{ref_id}|{name}|{inherent_level}|{current_level}|{residual_level}|{treatment}|\n"
+            result += (
+                f"|{uuid}|{ref_id}|{name}|{inherent_level}|{current_level}"
+                f"|{residual_level}|{treatment}|{owner}|{applied_controls}"
+                f"|{threats}|{assets}|\n"
+            )
 
         return success_response(
             result,
@@ -118,17 +128,20 @@ async def get_risk_scenario(scenario_id: str):
         result += f"**Impact:** {(rs.get('residual_impact') or {}).get('name', '--')}\n"
         result += f"**Level:** {(rs.get('residual_level') or {}).get('name', '--')}\n\n"
 
-        threats = rs.get("threats", [])
-        if threats:
-            result += f"**Threats:** {', '.join(t.get('str', str(t)) if isinstance(t, dict) else str(t) for t in threats)}\n"
+        from ..utils.detail_formatter import fmt_m2m
 
-        assets = rs.get("assets", [])
-        if assets:
-            result += f"**Assets:** {', '.join(a.get('str', str(a)) if isinstance(a, dict) else str(a) for a in assets)}\n"
-
-        applied_controls = rs.get("applied_controls", [])
-        if applied_controls:
-            result += f"**Applied Controls:** {', '.join(c.get('str', str(c)) if isinstance(c, dict) else str(c) for c in applied_controls)}\n"
+        result += f"**Threats:** {fmt_m2m(rs.get('threats'))}\n"
+        result += f"**Assets:** {fmt_m2m(rs.get('assets'))}\n"
+        result += f"**Applied Controls:** {fmt_m2m(rs.get('applied_controls'))}\n"
+        result += f"**Existing Applied Controls:** {fmt_m2m(rs.get('existing_applied_controls'))}\n"
+        result += f"**Owner:** {fmt_m2m(rs.get('owner'))}\n"
+        result += f"**Qualifications:** {fmt_m2m(rs.get('qualifications'))}\n"
+        result += f"**Incidents:** {fmt_m2m(rs.get('incidents'))}\n"
+        result += f"**Security Exceptions:** {fmt_m2m(rs.get('security_exceptions'))}\n"
+        result += f"**Filtering Labels:** {fmt_m2m(rs.get('filtering_labels'))}\n"
+        result += f"**Antecedent Scenarios:** {fmt_m2m(rs.get('antecedent_scenarios'))}\n"
+        result += f"**Strength of Knowledge:** {rs.get('strength_of_knowledge') or '-'}\n"
+        result += f"**Within Tolerance:** {rs.get('within_tolerance') if rs.get('within_tolerance') is not None else '-'}\n"
 
         return success_response(
             result,
@@ -144,14 +157,48 @@ async def get_risk_scenario(scenario_id: str):
         )
 
 
-async def get_applied_controls(folder: str = None):
-    """List applied controls from action plan; filter by folder
+async def get_applied_controls(
+    folder: str = None,
+    reference_control: str = None,
+    status: str = None,
+    category: str = None,
+    csf_function: str = None,
+    priority: str = None,
+    effort: str = None,
+    control_impact: str = None,
+    compliance_assessment: str = None,
+    risk_assessment: str = None,
+    todo: bool = None,
+    to_review: bool = None,
+    is_assigned: bool = None,
+):
+    """List applied controls from action plan.
+
+    All filters map to backend filterset fields (see AppliedControlFilterSet
+    in backend/core/views.py). Combine filters to narrow results.
 
     Args:
         folder: Folder ID/name
+        reference_control: Reference control ID/name to filter by
+        status: Status (planned, active, inactive, deprecated, on_hold, ...)
+        category: Category (policy, process, technical, physical, ...)
+        csf_function: CSF function (identify, protect, detect, respond, recover, govern)
+        priority: Priority (P1, P2, P3, P4)
+        effort: Effort (XS, S, M, L, XL)
+        control_impact: Impact value
+        compliance_assessment: Compliance assessment ID/name (returns controls linked through any requirement)
+        risk_assessment: Risk assessment ID/name (returns controls linked through any scenario)
+        todo: Only "to do" controls (planned/active with no eta or future eta)
+        to_review: Only controls awaiting review
+        is_assigned: Only controls with at least one owner
     """
     try:
-        from ..resolvers import resolve_folder_id
+        from ..resolvers import (
+            resolve_folder_id,
+            resolve_compliance_assessment_id,
+            resolve_risk_assessment_id,
+            resolve_id_or_name,
+        )
 
         params = {}
         filters = {}
@@ -160,6 +207,58 @@ async def get_applied_controls(folder: str = None):
         if folder:
             params["folder"] = resolve_folder_id(folder)
             filters["folder"] = folder
+
+        if reference_control:
+            params["reference_control"] = resolve_id_or_name(
+                reference_control, "/reference-controls/"
+            )
+            filters["reference_control"] = reference_control
+
+        if status:
+            params["status"] = status
+            filters["status"] = status
+
+        if category:
+            params["category"] = category
+            filters["category"] = category
+
+        if csf_function:
+            params["csf_function"] = csf_function
+            filters["csf_function"] = csf_function
+
+        if priority:
+            params["priority"] = priority
+            filters["priority"] = priority
+
+        if effort:
+            params["effort"] = effort
+            filters["effort"] = effort
+
+        if control_impact:
+            params["control_impact"] = control_impact
+            filters["control_impact"] = control_impact
+
+        if compliance_assessment:
+            params["compliance_assessments"] = resolve_compliance_assessment_id(
+                compliance_assessment
+            )
+            filters["compliance_assessment"] = compliance_assessment
+
+        if risk_assessment:
+            params["risk_assessments"] = resolve_risk_assessment_id(risk_assessment)
+            filters["risk_assessment"] = risk_assessment
+
+        if todo is not None:
+            params["todo"] = str(todo).lower()
+            filters["todo"] = todo
+
+        if to_review is not None:
+            params["to_review"] = str(to_review).lower()
+            filters["to_review"] = to_review
+
+        if is_assigned is not None:
+            params["is_assigned"] = str(is_assigned).lower()
+            filters["is_assigned"] = is_assigned
 
         res = make_get_request("/applied-controls/", params=params)
 
@@ -739,25 +838,34 @@ async def get_assets(folder: str = None):
         if not assets:
             return empty_response("assets", filters)
 
+        from ..utils.detail_formatter import fmt_m2m_cell
+
         result = f"Found {len(assets)} assets"
         if filters:
             result += f" ({', '.join(f'{k}={v}' for k, v in filters.items())})"
         result += "\n\n"
-        result += "|ID|Name|Type|Folder|\n"
-        result += "|---|---|---|---|\n"
+        result += "|ID|Ref|Name|Type|Folder|Owners|Applied Controls|Parent Assets|\n"
+        result += "|---|---|---|---|---|---|---|---|\n"
 
         for asset in assets:
             asset_id = asset.get("id", "N/A")
+            ref_id = asset.get("ref_id") or "-"
             name = asset.get("name", "N/A")
             asset_type = asset.get("type", "N/A")
             folder_name = (asset.get("folder") or {}).get("str", "N/A")
+            owners = fmt_m2m_cell(asset.get("owner"), max_inline=2)
+            applied_controls = fmt_m2m_cell(asset.get("applied_controls"), max_inline=2)
+            parents = fmt_m2m_cell(asset.get("parent_assets"), max_inline=2)
 
-            result += f"|{asset_id}|{name}|{asset_type}|{folder_name}|\n"
+            result += (
+                f"|{asset_id}|{ref_id}|{name}|{asset_type}|{folder_name}|{owners}"
+                f"|{applied_controls}|{parents}|\n"
+            )
 
         return success_response(
             result,
             "get_assets",
-            "Use this table to identify asset IDs for linking to risk scenarios",
+            "Use get_asset(<id>) to see full per-asset detail (children, solutions, security objectives, capabilities)",
         )
     except Exception as e:
         return error_response(
@@ -1034,24 +1142,37 @@ async def get_requirement_assessments(
         if not req_assessments:
             return "No requirement assessments found"
 
+        from ..utils.detail_formatter import fmt_m2m_cell
+
         result = f"Found {len(req_assessments)} requirement assessments\n\n"
-        result += "|ID|Ref|Description|Requirement|Assessment|Status|Result|\n"
-        result += "|---|---|---|---|---|---|---|\n"
+        result += "|ID|Ref|Name|Compliance Assessment|Status|Result|Score|Applied Controls|Evidences|\n"
+        result += "|---|---|---|---|---|---|---|---|---|\n"
 
         for req in req_assessments:
             req_id = req.get("id", "N/A")
-            req_ref_id = req.get("ref_id", "N/A")
-            requirement = req.get("name", "N/A")[:30]  # Truncate
-            description = req.get("description", "N/A")
+            req_ref_id = req.get("ref_id") or "-"
+            # Do not truncate names — the model uses them to reason about which
+            # requirement to update next.
+            requirement = req.get("name") or req.get("description") or "-"
             comp_assessment = (req.get("compliance_assessment") or {}).get(
-                "name", "N/A"
-            )[:20]
+                "str"
+            ) or (req.get("compliance_assessment") or {}).get("name") or "-"
             status = req.get("status", "N/A")
-            result_val = req.get("result", "N/A")
+            result_val = req.get("result") or "-"
+            score = req.get("score") if req.get("is_scored") else "-"
+            applied_controls = fmt_m2m_cell(req.get("applied_controls"), max_inline=3)
+            evidences = fmt_m2m_cell(req.get("evidences"), max_inline=3)
 
-            result += f"|{req_id}|{req_ref_id}|{description}|{requirement}|{comp_assessment}|{status}|{result_val}|\n"
+            result += (
+                f"|{req_id}|{req_ref_id}|{requirement}|{comp_assessment}|{status}"
+                f"|{result_val}|{score}|{applied_controls}|{evidences}|\n"
+            )
 
-        return result
+        return success_response(
+            result,
+            "get_requirement_assessments",
+            "Use get_requirement_assessment(<id>) to see the full applied-controls / evidences / threats list for one row.",
+        )
     except Exception as e:
         return f"Error in get_requirement_assessments: {str(e)}"
 
@@ -1281,32 +1402,49 @@ async def get_task_template_details(task_id: str):
 
         task = res.json()
 
-        # Create result
-        result = f"|ID|Name|Description|Ref ID|Status|Task Date|Recurrent|Enabled|Published|Link|Folder|Path|Observation|Evidences|Created|Updated|Assets|Applied Controls|Compliance Assessment|Risk Assessment|Assign To|\n"
-        result += "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n"
-        result += f"|{task.get('id', 'N/A')}|{task.get('name', 'N/A')}"
-        result += f"|{task.get('description', 'N/A')}"
-        result += f"|{task.get('ref_id', 'N/A')}"
-        result += f"|{task.get('status', 'N/A')}"
-        result += f"|{task.get('task_date', 'N/A')}"
-        result += f"|{'Yes' if task.get('is_recurrent') else 'No'}"
-        result += f"|{'Yes' if task.get('enabled') else 'No'}"
-        result += f"|{'Yes' if task.get('is_published') else 'No'}"
-        result += f"|{task.get('link', 'N/A')}"
-        result += f"|{task.get('folder', 'N/A')}"
-        result += f"|{task.get('path', 'N/A')}"
-        result += f"|{task.get('observation', 'N/A')}"
-        result += f"|{task.get('evidences', 'N/A')}"
-        result += f"|{task.get('created_at', 'N/A')}"
-        result += f"|{task.get('updated_at', 'N/A')}"
-        result += f"|{task.get('assets', [])}"
-        result += f"|{task.get('applied_controls', [])}"
-        result += f"|{task.get('compliance_assessments', [])}"
-        result += f"|{task.get('risk_assessments', [])}"
-        result += f"|{task.get('assigned_to', [])}"
-        result += "|\n"
+        from ..utils.detail_formatter import fmt_fk, fmt_m2m, render_detail
 
-        return result
+        return render_detail(
+            f"Task Template: {task.get('name', 'N/A')}",
+            [
+                (
+                    "",
+                    [
+                        ("ID", task.get("id")),
+                        ("Ref ID", task.get("ref_id")),
+                        ("Description", task.get("description")),
+                        ("Status", task.get("status")),
+                        ("Task Date", task.get("task_date")),
+                        ("Recurrent", task.get("is_recurrent")),
+                        ("Enabled", task.get("enabled")),
+                        ("Published", task.get("is_published")),
+                        ("Link", task.get("link")),
+                        ("Folder", fmt_fk(task.get("folder"))),
+                        ("Path", task.get("path")),
+                        ("Observation", task.get("observation")),
+                        ("Created", task.get("created_at")),
+                        ("Updated", task.get("updated_at")),
+                        ("Next Occurrence", task.get("next_occurrence")),
+                        ("Last Occurrence Status", task.get("last_occurrence_status")),
+                        ("Next Occurrence Status", task.get("next_occurrence_status")),
+                    ],
+                ),
+                (
+                    "Relations",
+                    [
+                        ("Evidences", fmt_m2m(task.get("evidences"))),
+                        ("Assets", fmt_m2m(task.get("assets"))),
+                        ("Applied Controls", fmt_m2m(task.get("applied_controls"))),
+                        (
+                            "Compliance Assessments",
+                            fmt_m2m(task.get("compliance_assessments")),
+                        ),
+                        ("Risk Assessments", fmt_m2m(task.get("risk_assessments"))),
+                        ("Assigned To", fmt_m2m(task.get("assigned_to"))),
+                    ],
+                ),
+            ],
+        )
     except Exception as e:
         return f"Error in get_task_template_details: {str(e)}"
 
@@ -1375,12 +1513,14 @@ async def get_vulnerabilities(
         if not vulnerabilities:
             return empty_response("vulnerabilities", filters)
 
+        from ..utils.detail_formatter import fmt_m2m_cell
+
         result = f"Found {len(vulnerabilities)} vulnerabilities"
         if filters:
             result += f" ({', '.join(f'{k}={v}' for k, v in filters.items())})"
         result += "\n\n"
-        result += "|ID|Name|Ref ID|Status|Severity|Folder|\n"
-        result += "|---|---|---|---|---|---|\n"
+        result += "|ID|Name|Ref ID|Status|Severity|Folder|CWEs|Advisories|\n"
+        result += "|---|---|---|---|---|---|---|---|\n"
 
         for vuln in vulnerabilities:
             vuln_id = vuln.get("id", "N/A")
@@ -1396,8 +1536,13 @@ async def get_vulnerabilities(
                 vuln_folder = vuln_folder.get("str", vuln_folder.get("name", "-"))
             else:
                 vuln_folder = str(vuln_folder) if vuln_folder else "-"
+            cwes = fmt_m2m_cell(vuln.get("cwes"), max_inline=3)
+            advisories = fmt_m2m_cell(vuln.get("security_advisories"), max_inline=2)
 
-            result += f"|{vuln_id}|{name}|{ref_id}|{vuln_status}|{vuln_severity}|{vuln_folder}|\n"
+            result += (
+                f"|{vuln_id}|{name}|{ref_id}|{vuln_status}|{vuln_severity}"
+                f"|{vuln_folder}|{cwes}|{advisories}|\n"
+            )
 
         return success_response(
             result,
@@ -1595,8 +1740,8 @@ async def get_users(
         if filters:
             result += f" ({', '.join(f'{k}={v}' for k, v in filters.items())})"
         result += "\n\n"
-        result += "|UUID|Email|First Name|Last Name|Active|\n"
-        result += "|---|---|---|---|---|\n"
+        result += "|UUID|Email|First Name|Last Name|Active|Staff|Superuser|Third Party|Last Login|\n"
+        result += "|---|---|---|---|---|---|---|---|---|\n"
 
         for user in users:
             user_id = user.get("id", "N/A")
@@ -1604,12 +1749,19 @@ async def get_users(
             first = user.get("first_name", "") or ""
             last = user.get("last_name", "") or ""
             active = user.get("is_active", "N/A")
-            result += f"|{user_id}|{user_email}|{first}|{last}|{active}|\n"
+            staff = user.get("is_staff", "-")
+            superuser = user.get("is_superuser", "-")
+            third_party = user.get("is_third_party", "-")
+            last_login = user.get("last_login") or "-"
+            result += (
+                f"|{user_id}|{user_email}|{first}|{last}|{active}|{staff}"
+                f"|{superuser}|{third_party}|{last_login}|\n"
+            )
 
         return success_response(
             result,
             "get_users",
-            "Use the UUID column to set the owner field when calling update_applied_control or update_asset",
+            "Use get_user(<id_or_email>) for groups/permissions detail, or use the UUID as `owner` on update_applied_control / update_asset",
         )
     except Exception as e:
         return error_response(

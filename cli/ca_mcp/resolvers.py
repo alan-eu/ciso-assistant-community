@@ -881,3 +881,31 @@ def resolve_kill_chain_id(kill_chain_id: str) -> str:
         return kill_chain_id
 
     raise ValueError(f"Kill chain step '{kill_chain_id}' is not a valid UUID")
+
+
+def resolve_user_id(user_email_or_id: str) -> str:
+    """Resolve a user UUID from an email address or UUID."""
+    if "-" in user_email_or_id and len(user_email_or_id) == 36:
+        return user_email_or_id
+
+    res = make_get_request("/users/", params={"email": user_email_or_id})
+    if res.status_code != 200:
+        raise ValueError(f"User '{user_email_or_id}' API error {res.status_code}")
+
+    data = res.json()
+    users = get_paginated_results(data)
+    if not users:
+        # Fall back to a search match (e.g. partial email)
+        res = make_get_request("/users/", params={"search": user_email_or_id})
+        if res.status_code == 200:
+            users = get_paginated_results(res.json())
+
+    if not users:
+        raise ValueError(f"User '{user_email_or_id}' not found")
+    if len(users) > 1:
+        emails = [u.get("email") for u in users[:3]]
+        raise ValueError(
+            f"Ambiguous user '{user_email_or_id}', found {len(users)}: {emails}"
+        )
+
+    return str(users[0]["id"])

@@ -594,20 +594,25 @@ async def get_attack_paths(
         if filters:
             result += f" ({', '.join(f'{k}={v}' for k, v in filters.items())})"
         result += "\n\n"
-        result += "|ID|Ref|Name|Strategic Scenario|Selected|Stakeholders|Study|\n"
-        result += "|---|---|---|---|---|---|---|\n"
+        from ..utils.detail_formatter import fmt_m2m_cell
+
+        result += "|ID|Ref|Name|Strategic Scenario|RO/TO Couple|Selected|Stakeholders|Study|\n"
+        result += "|---|---|---|---|---|---|---|---|\n"
 
         for ap in attack_paths:
             ap_id = ap.get("id", "N/A")
-            ref_id = ap.get("ref_id") or "N/A"
+            ref_id = ap.get("ref_id") or "-"
             name = ap.get("name", "N/A")
             strategic = (ap.get("strategic_scenario") or {}).get("str", "N/A")
+            ro_to = (ap.get("ro_to_couple") or {}).get("str") or "-"
             selected = "Yes" if ap.get("is_selected") else "No"
-            stakeholders = ap.get("stakeholders", [])
-            stakeholders_str = str(len(stakeholders)) if stakeholders else "0"
+            stakeholders_cell = fmt_m2m_cell(ap.get("stakeholders"), max_inline=3)
             study_name = (ap.get("ebios_rm_study") or {}).get("str", "N/A")
 
-            result += f"|{ap_id}|{ref_id}|{name}|{strategic}|{selected}|{stakeholders_str}|{study_name}|\n"
+            result += (
+                f"|{ap_id}|{ref_id}|{name}|{strategic}|{ro_to}|{selected}"
+                f"|{stakeholders_cell}|{study_name}|\n"
+            )
 
         return success_response(
             result,
@@ -654,15 +659,17 @@ async def get_operational_scenarios(
         if filters:
             result += f" ({', '.join(f'{k}={v}' for k, v in filters.items())})"
         result += "\n\n"
-        result += "|ID|Ref|Name|Likelihood|Gravity|Risk Level|Selected|Study|\n"
-        result += "|---|---|---|---|---|---|---|---|\n"
+        from ..utils.detail_formatter import fmt_m2m_cell
+
+        result += "|ID|Ref|Name|Likelihood|Gravity|Risk Level|Selected|Attack Path|Stakeholders|Threats|Study|\n"
+        result += "|---|---|---|---|---|---|---|---|---|---|---|\n"
 
         for scenario in scenarios:
             scenario_id = scenario.get("id", "N/A")
-            ref_id = scenario.get("ref_id") or "N/A"
-            name = (scenario.get("str") or scenario.get("name", "N/A"))[:40]
-            if len(scenario.get("str", scenario.get("name", ""))) > 40:
-                name += "..."
+            ref_id = scenario.get("ref_id") or "-"
+            # Do not truncate names — the model uses them to disambiguate
+            # scenarios when chaining tool calls.
+            name = scenario.get("name") or scenario.get("str") or "N/A"
 
             likelihood = scenario.get("likelihood", {})
             likelihood_name = (
@@ -685,8 +692,15 @@ async def get_operational_scenarios(
 
             selected = "Yes" if scenario.get("is_selected") else "No"
             study_name = (scenario.get("ebios_rm_study") or {}).get("str", "N/A")
+            attack_path = (scenario.get("attack_path") or {}).get("str") or "-"
+            stakeholders = fmt_m2m_cell(scenario.get("stakeholders"), max_inline=2)
+            threats = fmt_m2m_cell(scenario.get("threats"), max_inline=2)
 
-            result += f"|{scenario_id}|{ref_id}|{name}|{likelihood_name}|{gravity_name}|{risk_level_name}|{selected}|{study_name}|\n"
+            result += (
+                f"|{scenario_id}|{ref_id}|{name}|{likelihood_name}|{gravity_name}"
+                f"|{risk_level_name}|{selected}|{attack_path}|{stakeholders}"
+                f"|{threats}|{study_name}|\n"
+            )
 
         return success_response(
             result,

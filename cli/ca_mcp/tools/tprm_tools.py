@@ -150,8 +150,10 @@ async def get_entity_assessments(
         if filters:
             result += f" ({', '.join(f'{k}={v}' for k, v in filters.items())})"
         result += "\n\n"
-        result += "|ID|Name|Entity|Status|Conclusion|Criticality|Perimeter|Folder|\n"
-        result += "|---|---|---|---|---|---|---|---|\n"
+        from ..utils.detail_formatter import fmt_m2m_cell
+
+        result += "|ID|Name|Entity|Status|Conclusion|Criticality|Perimeter|Folder|Compliance Assessment|Solutions|Reviewers|\n"
+        result += "|---|---|---|---|---|---|---|---|---|---|---|\n"
 
         for assessment in assessments:
             assessment_id = assessment.get("id", "N/A")
@@ -162,8 +164,17 @@ async def get_entity_assessments(
             criticality = assessment.get("criticality", 0)
             perimeter = (assessment.get("perimeter") or {}).get("str", "N/A")
             folder_name = (assessment.get("folder") or {}).get("str", "N/A")
+            comp_assessment = (assessment.get("compliance_assessment") or {}).get(
+                "str"
+            ) or "-"
+            solutions = fmt_m2m_cell(assessment.get("solutions"), max_inline=2)
+            reviewers = fmt_m2m_cell(assessment.get("reviewers"), max_inline=2)
 
-            result += f"|{assessment_id}|{name}|{entity_name}|{status_val}|{conclusion_val}|{criticality}|{perimeter}|{folder_name}|\n"
+            result += (
+                f"|{assessment_id}|{name}|{entity_name}|{status_val}|{conclusion_val}"
+                f"|{criticality}|{perimeter}|{folder_name}|{comp_assessment}"
+                f"|{solutions}|{reviewers}|\n"
+            )
 
         return success_response(
             result,
