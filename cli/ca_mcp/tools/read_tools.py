@@ -1127,10 +1127,10 @@ async def get_requirement_assessments(
                     else:
                         return f"Compliance assessment '{compliance_assessment_id_or_name}' not found"
 
-        # Add ref_id filter if provided
-        if ref_id:
-            params["ref_id"] = ref_id
-
+        # ref_id is not a backend filterset field on RequirementAssessment —
+        # filter client-side after fetching. The backend exposes
+        # `requirement__urn` but not `ref_id`, so silently ignoring an unknown
+        # param would look like "filter doesn't work" from the caller's side.
         res = make_get_request("/requirement-assessments/", params=params)
 
         if res.status_code != 200:
@@ -1138,6 +1138,11 @@ async def get_requirement_assessments(
 
         data = res.json()
         req_assessments = get_paginated_results(data)
+
+        if ref_id:
+            req_assessments = [
+                r for r in req_assessments if (r.get("ref_id") or "") == ref_id
+            ]
 
         if not req_assessments:
             return "No requirement assessments found"
@@ -1175,6 +1180,77 @@ async def get_requirement_assessments(
         )
     except Exception as e:
         return f"Error in get_requirement_assessments: {str(e)}"
+
+
+async def get_requirement_assessment_observations(
+    compliance_assessment_id_or_name: str,
+    only_with_observation: bool = False,
+):
+    """Bulk-read the `observation` free-text field for every requirement
+    assessment in an audit — the field the list tool omits (to keep table
+    rows readable) and that would otherwise require one detail call per row.
+
+    Returns full observation text verbatim (never truncated), so it can be
+    used to do a real search-replace across an audit without overwriting the
+    caller's existing findings.
+
+    Args:
+        compliance_assessment_id_or_name: Compliance assessment UUID or name
+        only_with_observation: If True, skip rows whose observation is empty
+    """
+    try:
+        params = {}
+        if (
+            "-" in compliance_assessment_id_or_name
+            and len(compliance_assessment_id_or_name) == 36
+        ):
+            params["compliance_assessment"] = compliance_assessment_id_or_name
+        else:
+            ca_res = make_get_request(
+                "/compliance-assessments/",
+                params={"name": compliance_assessment_id_or_name},
+            )
+            if ca_res.status_code == 200:
+                ca_results = get_paginated_results(ca_res.json())
+                if ca_results:
+                    params["compliance_assessment"] = ca_results[0]["id"]
+                else:
+                    return f"Compliance assessment '{compliance_assessment_id_or_name}' not found"
+            else:
+                return f"Error: HTTP {ca_res.status_code} - {ca_res.text}"
+
+        res = make_get_request("/requirement-assessments/", params=params)
+        if res.status_code != 200:
+            return f"Error: HTTP {res.status_code} - {res.text}"
+
+        rows = get_paginated_results(res.json())
+        if only_with_observation:
+            rows = [r for r in rows if (r.get("observation") or "").strip()]
+
+        if not rows:
+            return "No requirement assessments found"
+
+        out = [f"Found {len(rows)} requirement assessments\n"]
+        for r in rows:
+            ra_id = r.get("id", "N/A")
+            ref_id = r.get("ref_id") or "-"
+            name = r.get("name") or r.get("description") or "-"
+            result_val = r.get("result") or "-"
+            status = r.get("status") or "-"
+            observation = r.get("observation")
+            obs_block = observation if observation not in (None, "") else "(empty)"
+            out.append(f"\n### {ref_id} — {name}\n")
+            out.append(f"- ID: {ra_id}\n")
+            out.append(f"- Status: {status} | Result: {result_val}\n")
+            out.append(f"- Observation:\n\n{obs_block}\n")
+
+        return success_response(
+            "".join(out),
+            "get_requirement_assessment_observations",
+            "Edit the text you want, then call update_requirement_assessment(<id>, observation=...) with the full replacement string.",
+        )
+    except Exception as e:
+        return f"Error in get_requirement_assessment_observations: {str(e)}"
 
 
 async def get_quantitative_risk_studies():

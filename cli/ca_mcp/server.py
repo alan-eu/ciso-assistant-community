@@ -23,6 +23,7 @@ from .tools.read_tools import (
     get_frameworks,
     get_business_impact_analyses,
     get_requirement_assessments,
+    get_requirement_assessment_observations,
     get_quantitative_risk_studies,
     get_quantitative_risk_scenarios,
     get_quantitative_risk_hypotheses,
@@ -381,6 +382,7 @@ mcp.tool()(get_security_exceptions)
 mcp.tool()(get_frameworks)
 mcp.tool()(get_business_impact_analyses)
 mcp.tool()(get_requirement_assessments)
+mcp.tool()(get_requirement_assessment_observations)
 mcp.tool()(get_quantitative_risk_studies)
 mcp.tool()(get_quantitative_risk_scenarios)
 mcp.tool()(get_quantitative_risk_hypotheses)
