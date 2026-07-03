@@ -2436,10 +2436,12 @@ class EvidenceWriteSerializer(BaseModelSerializer):
         # Track old folder before update
         old_folder_id = instance.folder_id
 
-        # link lives on EvidenceRevision, not Evidence — pop it so super().update()
-        # doesn't silently drop it as a non-model attr.
+        # link and attachment live on EvidenceRevision, not Evidence — pop them so
+        # super().update() doesn't silently drop them as non-model attrs.
         has_link = "link" in validated_data
+        has_attachment = "attachment" in validated_data
         link = validated_data.pop("link", None)
+        attachment = validated_data.pop("attachment", None)
 
         # Handle properly owner field cleaning
         owners = validated_data.get("owner", None)
@@ -2454,9 +2456,12 @@ class EvidenceWriteSerializer(BaseModelSerializer):
                     folder=instance.folder
                 )
 
-            if has_link:
+            if has_link or has_attachment:
                 revision = instance.last_revision or EvidenceRevision(evidence=instance)
-                revision.link = link
+                if has_link:
+                    revision.link = link
+                if has_attachment:
+                    revision.attachment = attachment
                 revision.save()
 
         return instance
